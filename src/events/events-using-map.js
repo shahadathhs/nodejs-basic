@@ -1,10 +1,10 @@
-// Custom implementation of the EventEmitter object
+// Custom implementation of the EventEmitter object using Map
 // Based on the guide from FreeCodeCamp:
 // https://www.freecodecamp.org/news/how-to-code-your-own-event-emitter-in-node-js-a-step-by-step-guide-e13b7e7908e1/
 
 export class EventEmitter {
-  // Master object to hold event names and their listeners
-  listeners = {};
+  // Map to hold event names and their listeners
+  listeners = new Map();
 
   // Maximum number of listeners per event before warning
   maxListeners = 10;
@@ -13,16 +13,19 @@ export class EventEmitter {
    * Adds a listener to the end of the list for a specific event.
    */
   addListener(eventName, fn) {
-    this.listeners[eventName] = this.listeners[eventName] || [];
+    if (!this.listeners.has(eventName)) {
+      this.listeners.set(eventName, []);
+    }
 
-    if (this.listeners[eventName].length >= this.maxListeners) {
+    const fns = this.listeners.get(eventName);
+    if (fns.length >= this.maxListeners) {
       console.warn(
         `Warning: Possible EventEmitter memory leak detected. ` +
-        `${this.listeners[eventName].length + 1} listeners added to "${eventName}".`
+        `${fns.length + 1} listeners added to "${eventName}".`
       );
     }
 
-    this.listeners[eventName].push(fn);
+    fns.push(fn);
     return this;
   }
 
@@ -37,14 +40,16 @@ export class EventEmitter {
    * Adds a one-time listener that is removed after being triggered once.
    */
   once(eventName, fn) {
-    this.listeners[eventName] = this.listeners[eventName] || [];
+    if (!this.listeners.has(eventName)) {
+      this.listeners.set(eventName, []);
+    }
 
     const onceWrapper = (...args) => {
       fn(...args);
       this.off(eventName, onceWrapper);
     };
 
-    this.listeners[eventName].push(onceWrapper);
+    this.listeners.get(eventName).push(onceWrapper);
     return this;
   }
 
@@ -59,20 +64,20 @@ export class EventEmitter {
    * Removes a specific listener, or all if no function is passed.
    */
   removeListener(eventName, fn) {
-    const lis = this.listeners[eventName];
-    if (!lis) return this;
+    const fns = this.listeners.get(eventName);
+    if (!fns) return this;
 
     if (!fn) {
       // Remove all listeners for the event
-      delete this.listeners[eventName];
+      this.listeners.delete(eventName);
       return this;
     }
 
-    for (let i = lis.length - 1; i >= 0; i--) {
-      if (lis[i] === fn) {
-        lis.splice(i, 1);
-        break;
-      }
+    const updated = fns.filter((listener) => listener !== fn);
+    if (updated.length > 0) {
+      this.listeners.set(eventName, updated);
+    } else {
+      this.listeners.delete(eventName);
     }
 
     return this;
@@ -82,14 +87,11 @@ export class EventEmitter {
    * Emits an event, calling all listeners with given arguments.
    */
   emit(eventName, ...args) {
-    const fns = this.listeners[eventName];
+    const fns = this.listeners.get(eventName);
     if (!fns) return false;
 
-    // Call each listener with spread args
-    fns.forEach((fn) => {
-      fn(...args);
-    });
-
+    // Clone the array in case listeners modify it
+    [...fns].forEach((fn) => fn(...args));
     return true;
   }
 
@@ -97,38 +99,40 @@ export class EventEmitter {
    * Returns the number of listeners for an event.
    */
   listenerCount(eventName) {
-    const fns = this.listeners[eventName] || [];
-    return fns.length;
+    return this.listeners.get(eventName)?.length ?? 0;
   }
 
   /**
    * Returns the raw array of listeners for a specific event.
    */
   rawListeners(eventName) {
-    return this.listeners[eventName] || [];
+    return this.listeners.get(eventName) ?? [];
   }
 
   /**
    * Returns an array of all event names with registered listeners.
    */
   eventNames() {
-    return Object.keys(this.listeners);
+    return [...this.listeners.keys()];
   }
 
   /**
    * Adds a listener to the **beginning** of the list for an event.
    */
   prependListener(eventName, fn) {
-    this.listeners[eventName] = this.listeners[eventName] || [];
+    if (!this.listeners.has(eventName)) {
+      this.listeners.set(eventName, []);
+    }
 
-    if (this.listeners[eventName].length >= this.maxListeners) {
+    const fns = this.listeners.get(eventName);
+    if (fns.length >= this.maxListeners) {
       console.warn(
         `Warning: Possible EventEmitter memory leak detected. ` +
-        `${this.listeners[eventName].length + 1} listeners added to "${eventName}".`
+        `${fns.length + 1} listeners added to "${eventName}".`
       );
     }
 
-    this.listeners[eventName].unshift(fn);
+    fns.unshift(fn);
     return this;
   }
 
@@ -136,26 +140,27 @@ export class EventEmitter {
    * Adds a one-time listener at the beginning of the listener array.
    */
   prependOnceListener(eventName, fn) {
-    this.listeners[eventName] = this.listeners[eventName] || [];
+    if (!this.listeners.has(eventName)) {
+      this.listeners.set(eventName, []);
+    }
 
     const onceWrapper = (...args) => {
       fn(...args);
       this.off(eventName, onceWrapper);
     };
 
-    this.listeners[eventName].unshift(onceWrapper);
+    this.listeners.get(eventName).unshift(onceWrapper);
     return this;
   }
 
   /**
-   * Removes all listeners for a specific event, or all events if no eventName
-   * is provided.
+   * Removes all listeners for a specific event, or all events if no eventName is provided.
    */
   removeAllListeners(eventName) {
     if (eventName) {
-      delete this.listeners[eventName];
+      this.listeners.delete(eventName);
     } else {
-      this.listeners = {};
+      this.listeners.clear();
     }
     return this;
   }

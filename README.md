@@ -10,10 +10,10 @@ Please follow the below instructions to run this project in your machine:
    ```
 2. Install dev dependencies
    ```sh
-   npm install
+   pnpm install
    ```
 3. Run the app
    ```sh
-   npm start
+   pnpm start
    ```
 4. Your app should be available in http://localhost:3000

@@ -2,7 +2,8 @@
 // import { EventEmitter } from 'events';
 
 // Import the custom EventEmitter implementation
-import { EventEmitter } from './events.js';
+// import { EventEmitter } from './events.js';
+import { EventEmitter } from './events-using-map.js';
 
 export function runEvents() {
   class Emitter extends EventEmitter {}
