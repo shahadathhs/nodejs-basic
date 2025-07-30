@@ -3,8 +3,8 @@ import { runEvents } from '#events/run-events.js';
 
 function main() {
   const server = http.createServer((req, res) => {
-    if (req.url === '/run-app' && req.method === 'GET') {
-      runEvents(); // Run the app.js event logic
+    if (req.url === '/run-events' && req.method === 'GET') {
+      runEvents(); // Run the run-events.js event logic
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end('Event logic from app.js executed!\n');
     } else {

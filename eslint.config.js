@@ -41,10 +41,10 @@ export default defineConfig([
       ],
 
       // * Additional helpful rules
-      'no-console': [
-        'warn',
-        { allow: ['warn', 'error', 'info', 'group', 'groupEnd'] },
-      ],
+      // 'no-console': [
+      //   'warn',
+      //   { allow: ['warn', 'error', 'info', 'group', 'groupEnd'] },
+      // ],
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-unused-expressions': 'error',
     },
